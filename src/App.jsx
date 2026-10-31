@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
+import HomePage from './components/HomePage';
 import StudentPortal from './components/StudentPortal';
 import TpoPortal from './components/TpoPortal';
 import RecruiterPortal from './components/RecruiterPortal';
@@ -21,7 +22,7 @@ import {
 } from 'lucide-react';
 
 export default function App() {
-  const [activeRole, setActiveRole] = useState('student');
+  const [activeRole, setActiveRole] = useState('home');
   const [isDarkTheme, setIsDarkTheme] = useState(true);
 
   // Core state shared across portals
@@ -64,6 +65,14 @@ export default function App() {
 
       {/* Main Workspace */}
       <main className="app-main">
+        {activeRole === 'home' && (
+          <HomePage
+            setActiveRole={setActiveRole}
+            jobs={jobs}
+            studentProfile={studentProfile}
+          />
+        )}
+
         {activeRole === 'student' && (
           <StudentPortal
             studentProfile={studentProfile}
@@ -102,7 +111,12 @@ export default function App() {
           <div className="footer-top-grid">
             {/* Column 1: Brand & Core Mission */}
             <div className="footer-brand-col">
-              <div className="footer-brand-title">
+              <div
+                className="footer-brand-title"
+                style={{ cursor: 'pointer' }}
+                onClick={() => setActiveRole('home')}
+                title="Go to Homepage"
+              >
                 <div
                   style={{
                     width: '34px',

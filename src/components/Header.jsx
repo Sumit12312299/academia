@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  Home,
   GraduationCap,
   Building2,
   Briefcase,
@@ -20,6 +21,7 @@ export default function Header({
   notificationsCount = 3,
 }) {
   const roles = [
+    { id: 'home', label: 'Home / Overview', icon: Home, badge: 'Hub' },
     { id: 'student', label: 'Student Portal', icon: GraduationCap, badge: 'Aarav' },
     { id: 'tpo', label: 'Institute / TPO Cell', icon: Building2, badge: 'DTU' },
     { id: 'recruiter', label: 'Industry & Recruiters', icon: Briefcase, badge: 'Hiring' },
@@ -30,7 +32,7 @@ export default function Header({
     <header className="app-header">
       <div className="header-container">
         {/* Brand */}
-        <div className="brand-wrapper" onClick={() => setActiveRole('student')}>
+        <div className="brand-wrapper" onClick={() => setActiveRole('home')}>
           <div className="brand-logo-icon">
             <Sparkles size={22} />
           </div>
@@ -103,6 +105,7 @@ export default function Header({
             <div className="avatar-circle">DTU</div>
             <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.1 }}>
               <span style={{ fontWeight: 600, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                {activeRole === 'home' && 'DTU Central Hub'}
                 {activeRole === 'student' && 'Aarav Sharma'}
                 {activeRole === 'tpo' && 'TPO Admin (DTU)'}
                 {activeRole === 'recruiter' && 'Talent Partner'}
@@ -110,6 +113,7 @@ export default function Header({
                 <CheckCircle2 size={13} color="#10b981" />
               </span>
               <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                {activeRole === 'home' && 'All 4 Portals Active'}
                 {activeRole === 'student' && 'B.Tech CSE • CGPA 8.74'}
                 {activeRole === 'tpo' && 'Training & Placement'}
                 {activeRole === 'recruiter' && 'Verified Corporate'}
