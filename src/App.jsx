@@ -25,7 +25,16 @@ import {
 
 export default function App() {
   const [activeRole, setActiveRole] = useState('home');
-  const [isDarkTheme, setIsDarkTheme] = useState(true);
+  const [isDarkTheme, setIsDarkTheme] = useState(false); // Default to Light Mode
+
+  // Sync body theme class
+  useEffect(() => {
+    if (isDarkTheme) {
+      document.body.classList.remove('light-theme');
+    } else {
+      document.body.classList.add('light-theme');
+    }
+  }, [isDarkTheme]);
 
   // Authentication states for the 3 distinct roles:
   // student, tpo, recruiter. (AI Career Mentor has NO login requirement as requested).

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Home,
   GraduationCap,
@@ -8,10 +8,12 @@ import {
   Sun,
   Moon,
   RotateCcw,
-  Bell,
   CheckCircle2,
   LogOut,
-  Lock,
+  LogIn,
+  ShieldCheck,
+  User,
+  ChevronDown,
 } from 'lucide-react';
 
 export default function Header({
@@ -23,38 +25,45 @@ export default function Header({
   authUsers = {},
   onLogout,
 }) {
+  const [showPortalMenu, setShowPortalMenu] = useState(false);
+
   const isStudentLoggedIn = !!authUsers.student;
   const isTpoLoggedIn = !!authUsers.tpo;
   const isRecruiterLoggedIn = !!authUsers.recruiter;
 
   const roles = [
-    { id: 'home', label: 'Home / Overview', icon: Home, badge: 'Hub' },
+    {
+      id: 'home',
+      label: 'Home',
+      icon: Home,
+      badge: null,
+    },
     {
       id: 'student',
-      label: 'Student Portal',
+      label: 'Student',
       icon: GraduationCap,
       badge: isStudentLoggedIn ? (authUsers.student.name ? authUsers.student.name.split(' ')[0] : 'Aarav') : 'Sign In',
       isLoggedIn: isStudentLoggedIn,
     },
     {
       id: 'tpo',
-      label: 'Institute / TPO Cell',
+      label: 'TPO Cell',
       icon: Building2,
-      badge: isTpoLoggedIn ? 'DTU Admin' : 'Sign In',
+      badge: isTpoLoggedIn ? 'Admin' : 'Sign In',
       isLoggedIn: isTpoLoggedIn,
     },
     {
       id: 'recruiter',
-      label: 'Industry & Recruiters',
+      label: 'Recruiters',
       icon: Briefcase,
-      badge: isRecruiterLoggedIn ? authUsers.recruiter.company : 'Sign In',
+      badge: isRecruiterLoggedIn ? (authUsers.recruiter.company || 'Partner') : 'Sign In',
       isLoggedIn: isRecruiterLoggedIn,
     },
     {
       id: 'ai_mentor',
-      label: 'AI Career Mentor',
+      label: 'AI Mentor',
       icon: Sparkles,
-      badge: 'Free / Open',
+      badge: 'Free',
     },
   ];
 
@@ -67,6 +76,8 @@ export default function Header({
       ? authUsers.recruiter
       : null;
 
+  const isCurrentRoleProtected = ['student', 'tpo', 'recruiter'].includes(activeRole);
+
   return (
     <header className="app-header">
       <div className="header-container">
@@ -75,17 +86,17 @@ export default function Header({
           <div className="brand-logo-icon">
             <Sparkles size={22} />
           </div>
-          <div>
+          <div className="brand-text-block">
             <div className="brand-title">
               SkillBridge AI
             </div>
             <div className="brand-subtitle">
-              Academia–Industry Collaboration & Placement Portal
+              Academia–Industry Collaboration
             </div>
           </div>
         </div>
 
-        {/* Role Selector Tabs */}
+        {/* Role Selector Tabs with Balanced Typography & Prominent Icons */}
         <nav className="role-nav" aria-label="Role Portals">
           {roles.map((r) => {
             const IconComponent = r.icon;
@@ -97,26 +108,11 @@ export default function Header({
                 className={`role-pill-btn ${isActive ? 'active' : ''}`}
                 onClick={() => setActiveRole(r.id)}
               >
-                <IconComponent size={16} />
-                <span>{r.label}</span>
+                <IconComponent size={19} className="nav-role-icon" />
+                <span className="nav-role-label">{r.label}</span>
                 {r.badge && (
                   <span
-                    style={{
-                      fontSize: '0.68rem',
-                      padding: '0.1rem 0.4rem',
-                      borderRadius: 'var(--radius-full)',
-                      background: isActive
-                        ? 'rgba(255, 255, 255, 0.2)'
-                        : r.badge === 'Sign In'
-                        ? 'rgba(244, 63, 94, 0.15)'
-                        : 'var(--bg-glass-active)',
-                      color: isActive
-                        ? '#fff'
-                        : r.badge === 'Sign In'
-                        ? '#f43f5e'
-                        : 'var(--text-muted)',
-                      border: r.badge === 'Sign In' ? '1px solid rgba(244, 63, 94, 0.3)' : 'none',
-                    }}
+                    className={`nav-role-badge ${isActive ? 'active' : ''} ${r.badge === 'Sign In' ? 'signin-badge' : ''}`}
                   >
                     {r.badge}
                   </span>
@@ -126,69 +122,147 @@ export default function Header({
           })}
         </nav>
 
-        {/* Header Actions */}
+        {/* Header Actions & Revamped Right-Side Login Widget */}
         <div className="header-actions">
-          <button
-            className="icon-btn"
-            title="Reset to Initial Demo State"
-            onClick={resetDemoData}
-            aria-label="Reset Demo Data"
-          >
-            <RotateCcw size={16} />
-          </button>
-
+          {/* Theme Switcher */}
           <button
             className="icon-btn"
             title={isDarkTheme ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
             onClick={toggleTheme}
             aria-label="Toggle Theme"
           >
-            {isDarkTheme ? <Sun size={17} /> : <Moon size={17} />}
+            {isDarkTheme ? <Sun size={18} /> : <Moon size={18} />}
           </button>
 
-          {/* User Status / Badge */}
-          <div
-            className="user-badge-header"
-            title="Authenticated Session Status"
+          {/* Reset Demo Data */}
+          <button
+            className="icon-btn"
+            title="Reset to Initial State"
+            onClick={resetDemoData}
+            aria-label="Reset Demo Data"
           >
-            <div className="avatar-circle">
-              {activeRole === 'student' && (currentRoleAuth ? currentRoleAuth.name.slice(0, 2).toUpperCase() : 'ST')}
-              {activeRole === 'tpo' && (currentRoleAuth ? 'SG' : 'TP')}
-              {activeRole === 'recruiter' && (currentRoleAuth ? 'HR' : 'RC')}
-              {activeRole === 'ai_mentor' && 'AI'}
-              {activeRole === 'home' && 'HUB'}
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.1 }}>
-              <span style={{ fontWeight: 600, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                {activeRole === 'home' && 'DTU Central Hub'}
-                {activeRole === 'ai_mentor' && 'AI Career Counselor (Open)'}
-                {activeRole === 'student' && (currentRoleAuth ? currentRoleAuth.name : 'Student Login')}
-                {activeRole === 'tpo' && (currentRoleAuth ? currentRoleAuth.name : 'TPO Admin Login')}
-                {activeRole === 'recruiter' && (currentRoleAuth ? `${currentRoleAuth.name} (${currentRoleAuth.company})` : 'Recruiter Login')}
-                {currentRoleAuth && <CheckCircle2 size={13} color="#10b981" />}
-              </span>
-              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                {activeRole === 'home' && 'All 4 Portals Synchronized'}
-                {activeRole === 'ai_mentor' && 'Model v4.5 • No Login Required'}
-                {activeRole === 'student' && (currentRoleAuth ? `${currentRoleAuth.rollNo} • CGPA ${currentRoleAuth.cgpa}` : 'Authentication Required')}
-                {activeRole === 'tpo' && (currentRoleAuth ? 'DTU Placement Head' : 'Faculty Passcode Required')}
-                {activeRole === 'recruiter' && (currentRoleAuth ? currentRoleAuth.roleTitle : 'Corporate Work Email Required')}
-              </span>
-            </div>
+            <RotateCcw size={17} />
+          </button>
 
-            {/* Logout button if logged into active role */}
-            {currentRoleAuth && (
+          {/* Beautiful Right-Side Login / Auth Profile Widget */}
+          {isCurrentRoleProtected && !currentRoleAuth ? (
+            /* State 1: On a protected role but not logged in -> High-Affordance Login Button */
+            <button
+              className="btn-header-login-cta"
+              onClick={() => setActiveRole(activeRole)}
+              title={`Sign in to ${activeRole === 'student' ? 'Student' : activeRole === 'tpo' ? 'TPO' : 'Recruiter'} Portal`}
+            >
+              <div className="login-btn-icon-bubble">
+                <LogIn size={15} />
+              </div>
+              <div className="login-btn-text">
+                <span className="login-btn-title">
+                  {activeRole === 'student' ? 'Student Login' : activeRole === 'tpo' ? 'TPO Login' : 'Recruiter Login'}
+                </span>
+                <span className="login-btn-sub">Sign in with credentials</span>
+              </div>
+            </button>
+          ) : currentRoleAuth ? (
+            /* State 2: Authenticated Session -> Verified Profile Card with Logout */
+            <div className="user-badge-header verified-card">
+              <div className="avatar-circle-ring">
+                <div className="avatar-circle">
+                  {activeRole === 'student'
+                    ? currentRoleAuth.name.slice(0, 2).toUpperCase()
+                    : activeRole === 'tpo'
+                    ? 'SG'
+                    : 'HR'}
+                </div>
+                <span className="online-status-dot" />
+              </div>
+
+              <div className="user-badge-meta">
+                <span className="user-badge-name">
+                  {currentRoleAuth.name}
+                  <CheckCircle2 size={13} color="#10b981" />
+                </span>
+                <span className="user-badge-sub">
+                  {activeRole === 'student' && `${currentRoleAuth.rollNo || '22CS084'} • CGPA ${currentRoleAuth.cgpa || 8.74}`}
+                  {activeRole === 'tpo' && 'DTU Placement Head'}
+                  {activeRole === 'recruiter' && (currentRoleAuth.company || 'Corporate Partner')}
+                </span>
+              </div>
+
               <button
                 className="btn-header-logout"
-                title={`Log out from ${activeRole} portal`}
+                title={`Log out from ${activeRole}`}
                 onClick={() => onLogout(activeRole)}
                 aria-label="Log out"
               >
-                <LogOut size={14} />
+                <LogOut size={13} />
                 <span>Logout</span>
               </button>
-            )}
-          </div>
+            </div>
+          ) : (
+            /* State 3: On Home / AI Mentor -> Universal Portal Gateway Widget */
+            <div className="portal-access-header-widget">
+              <button
+                className="btn-portal-gateway"
+                onClick={() => setShowPortalMenu(!showPortalMenu)}
+                title="Quick Portal Sign In"
+              >
+                <div className="gateway-icon-box">
+                  <ShieldCheck size={16} />
+                </div>
+                <div className="gateway-text-block">
+                  <span className="gateway-title">DTU Campus Hub</span>
+                  <span className="gateway-sub">All Portals Ready</span>
+                </div>
+                <ChevronDown size={14} className="gateway-chevron" />
+              </button>
+
+              {/* Quick Dropdown Menu for Direct Portal Access */}
+              {showPortalMenu && (
+                <div className="portal-dropdown-menu">
+                  <div className="menu-header">Quick Portal Access</div>
+                  <button
+                    className="menu-item-btn"
+                    onClick={() => {
+                      setActiveRole('student');
+                      setShowPortalMenu(false);
+                    }}
+                  >
+                    <GraduationCap size={16} color="#06b6d4" />
+                    <div className="item-text">
+                      <strong>Student Portal</strong>
+                      <span>{isStudentLoggedIn ? 'Session Active (Aarav)' : 'Requires Student Login'}</span>
+                    </div>
+                  </button>
+                  <button
+                    className="menu-item-btn"
+                    onClick={() => {
+                      setActiveRole('tpo');
+                      setShowPortalMenu(false);
+                    }}
+                  >
+                    <Building2 size={16} color="#818cf8" />
+                    <div className="item-text">
+                      <strong>Institute & TPO Cell</strong>
+                      <span>{isTpoLoggedIn ? 'Session Active (Admin)' : 'Requires Faculty Passcode'}</span>
+                    </div>
+                  </button>
+                  <button
+                    className="menu-item-btn"
+                    onClick={() => {
+                      setActiveRole('recruiter');
+                      setShowPortalMenu(false);
+                    }}
+                  >
+                    <Briefcase size={16} color="#10b981" />
+                    <div className="item-text">
+                      <strong>Recruiter Gateway</strong>
+                      <span>{isRecruiterLoggedIn ? 'Session Active (Partner)' : 'Corporate Work Email'}</span>
+                    </div>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </header>
