@@ -10,6 +10,8 @@ import {
   RotateCcw,
   Bell,
   CheckCircle2,
+  LogOut,
+  Lock,
 } from 'lucide-react';
 
 export default function Header({
@@ -18,15 +20,52 @@ export default function Header({
   isDarkTheme,
   toggleTheme,
   resetDemoData,
-  notificationsCount = 3,
+  authUsers = {},
+  onLogout,
 }) {
+  const isStudentLoggedIn = !!authUsers.student;
+  const isTpoLoggedIn = !!authUsers.tpo;
+  const isRecruiterLoggedIn = !!authUsers.recruiter;
+
   const roles = [
     { id: 'home', label: 'Home / Overview', icon: Home, badge: 'Hub' },
-    { id: 'student', label: 'Student Portal', icon: GraduationCap, badge: 'Aarav' },
-    { id: 'tpo', label: 'Institute / TPO Cell', icon: Building2, badge: 'DTU' },
-    { id: 'recruiter', label: 'Industry & Recruiters', icon: Briefcase, badge: 'Hiring' },
-    { id: 'ai_mentor', label: 'AI Career Mentor', icon: Sparkles, badge: 'GenAI' },
+    {
+      id: 'student',
+      label: 'Student Portal',
+      icon: GraduationCap,
+      badge: isStudentLoggedIn ? (authUsers.student.name ? authUsers.student.name.split(' ')[0] : 'Aarav') : 'Sign In',
+      isLoggedIn: isStudentLoggedIn,
+    },
+    {
+      id: 'tpo',
+      label: 'Institute / TPO Cell',
+      icon: Building2,
+      badge: isTpoLoggedIn ? 'DTU Admin' : 'Sign In',
+      isLoggedIn: isTpoLoggedIn,
+    },
+    {
+      id: 'recruiter',
+      label: 'Industry & Recruiters',
+      icon: Briefcase,
+      badge: isRecruiterLoggedIn ? authUsers.recruiter.company : 'Sign In',
+      isLoggedIn: isRecruiterLoggedIn,
+    },
+    {
+      id: 'ai_mentor',
+      label: 'AI Career Mentor',
+      icon: Sparkles,
+      badge: 'Free / Open',
+    },
   ];
+
+  const currentRoleAuth =
+    activeRole === 'student'
+      ? authUsers.student
+      : activeRole === 'tpo'
+      ? authUsers.tpo
+      : activeRole === 'recruiter'
+      ? authUsers.recruiter
+      : null;
 
   return (
     <header className="app-header">
@@ -66,8 +105,17 @@ export default function Header({
                       fontSize: '0.68rem',
                       padding: '0.1rem 0.4rem',
                       borderRadius: 'var(--radius-full)',
-                      background: isActive ? 'rgba(255, 255, 255, 0.2)' : 'var(--bg-glass-active)',
-                      color: isActive ? '#fff' : 'var(--text-muted)',
+                      background: isActive
+                        ? 'rgba(255, 255, 255, 0.2)'
+                        : r.badge === 'Sign In'
+                        ? 'rgba(244, 63, 94, 0.15)'
+                        : 'var(--bg-glass-active)',
+                      color: isActive
+                        ? '#fff'
+                        : r.badge === 'Sign In'
+                        ? '#f43f5e'
+                        : 'var(--text-muted)',
+                      border: r.badge === 'Sign In' ? '1px solid rgba(244, 63, 94, 0.3)' : 'none',
                     }}
                   >
                     {r.badge}
@@ -98,28 +146,48 @@ export default function Header({
             {isDarkTheme ? <Sun size={17} /> : <Moon size={17} />}
           </button>
 
+          {/* User Status / Badge */}
           <div
             className="user-badge-header"
-            title="Authenticated Session: Verified Institutional Profile"
+            title="Authenticated Session Status"
           >
-            <div className="avatar-circle">DTU</div>
+            <div className="avatar-circle">
+              {activeRole === 'student' && (currentRoleAuth ? currentRoleAuth.name.slice(0, 2).toUpperCase() : 'ST')}
+              {activeRole === 'tpo' && (currentRoleAuth ? 'SG' : 'TP')}
+              {activeRole === 'recruiter' && (currentRoleAuth ? 'HR' : 'RC')}
+              {activeRole === 'ai_mentor' && 'AI'}
+              {activeRole === 'home' && 'HUB'}
+            </div>
             <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.1 }}>
               <span style={{ fontWeight: 600, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                 {activeRole === 'home' && 'DTU Central Hub'}
-                {activeRole === 'student' && 'Aarav Sharma'}
-                {activeRole === 'tpo' && 'TPO Admin (DTU)'}
-                {activeRole === 'recruiter' && 'Talent Partner'}
-                {activeRole === 'ai_mentor' && 'AI Counselor'}
-                <CheckCircle2 size={13} color="#10b981" />
+                {activeRole === 'ai_mentor' && 'AI Career Counselor (Open)'}
+                {activeRole === 'student' && (currentRoleAuth ? currentRoleAuth.name : 'Student Login')}
+                {activeRole === 'tpo' && (currentRoleAuth ? currentRoleAuth.name : 'TPO Admin Login')}
+                {activeRole === 'recruiter' && (currentRoleAuth ? `${currentRoleAuth.name} (${currentRoleAuth.company})` : 'Recruiter Login')}
+                {currentRoleAuth && <CheckCircle2 size={13} color="#10b981" />}
               </span>
               <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                {activeRole === 'home' && 'All 4 Portals Active'}
-                {activeRole === 'student' && 'B.Tech CSE • CGPA 8.74'}
-                {activeRole === 'tpo' && 'Training & Placement'}
-                {activeRole === 'recruiter' && 'Verified Corporate'}
-                {activeRole === 'ai_mentor' && 'Model v4.5 Active'}
+                {activeRole === 'home' && 'All 4 Portals Synchronized'}
+                {activeRole === 'ai_mentor' && 'Model v4.5 • No Login Required'}
+                {activeRole === 'student' && (currentRoleAuth ? `${currentRoleAuth.rollNo} • CGPA ${currentRoleAuth.cgpa}` : 'Authentication Required')}
+                {activeRole === 'tpo' && (currentRoleAuth ? 'DTU Placement Head' : 'Faculty Passcode Required')}
+                {activeRole === 'recruiter' && (currentRoleAuth ? currentRoleAuth.roleTitle : 'Corporate Work Email Required')}
               </span>
             </div>
+
+            {/* Logout button if logged into active role */}
+            {currentRoleAuth && (
+              <button
+                className="btn-header-logout"
+                title={`Log out from ${activeRole} portal`}
+                onClick={() => onLogout(activeRole)}
+                aria-label="Log out"
+              >
+                <LogOut size={14} />
+                <span>Logout</span>
+              </button>
+            )}
           </div>
         </div>
       </div>

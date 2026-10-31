@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import HomePage from './components/HomePage';
+import RoleLoginPortal from './components/RoleLoginPortal';
 import StudentPortal from './components/StudentPortal';
 import TpoPortal from './components/TpoPortal';
 import RecruiterPortal from './components/RecruiterPortal';
 import AiMentorView from './components/AiMentorView';
 import {
   INITIAL_STUDENT_PROFILE,
+  SAMPLE_RESUMES,
   INITIAL_JOB_POSTINGS,
   INITIAL_APPLICATIONS,
 } from './data/mockData';
@@ -25,10 +27,59 @@ export default function App() {
   const [activeRole, setActiveRole] = useState('home');
   const [isDarkTheme, setIsDarkTheme] = useState(true);
 
+  // Authentication states for the 3 distinct roles:
+  // student, tpo, recruiter. (AI Career Mentor has NO login requirement as requested).
+  const [authUsers, setAuthUsers] = useState({
+    student: null, // null = requires student login
+    tpo: null,     // null = requires TPO/institutional login
+    recruiter: null, // null = requires corporate recruiter login
+  });
+
   // Core state shared across portals
   const [studentProfile, setStudentProfile] = useState(INITIAL_STUDENT_PROFILE);
   const [jobs, setJobs] = useState(INITIAL_JOB_POSTINGS);
   const [applications, setApplications] = useState(INITIAL_APPLICATIONS);
+
+  // Handle successful login for a specific role
+  const handleLoginSuccess = (role, userPayload) => {
+    setAuthUsers((prev) => ({
+      ...prev,
+      [role]: userPayload,
+    }));
+
+    // If student logged in with another profile (e.g. Priya or Rohan), adapt studentProfile
+    if (role === 'student' && userPayload.name) {
+      if (userPayload.name.includes('Priya')) {
+        setStudentProfile((prev) => ({
+          ...prev,
+          name: 'Priya Verma',
+          rollNo: '22AI012',
+          department: 'Artificial Intelligence & Data Science',
+          cgpa: 9.12,
+          extractedSkills: SAMPLE_RESUMES[1].skills,
+        }));
+      } else if (userPayload.name.includes('Rohan')) {
+        setStudentProfile((prev) => ({
+          ...prev,
+          name: 'Rohan Mehra',
+          rollNo: '22IT045',
+          department: 'Information Technology',
+          cgpa: 7.95,
+          extractedSkills: SAMPLE_RESUMES[2].skills,
+        }));
+      } else {
+        setStudentProfile(INITIAL_STUDENT_PROFILE);
+      }
+    }
+  };
+
+  // Handle logout for a role
+  const handleLogout = (role) => {
+    setAuthUsers((prev) => ({
+      ...prev,
+      [role]: null,
+    }));
+  };
 
   // Toggle dark/light theme
   const toggleTheme = () => {
@@ -48,23 +99,31 @@ export default function App() {
     setStudentProfile(INITIAL_STUDENT_PROFILE);
     setJobs(INITIAL_JOB_POSTINGS);
     setApplications(INITIAL_APPLICATIONS);
-    alert('Demo data has been reset to default state.');
+    setAuthUsers({
+      student: null,
+      tpo: null,
+      recruiter: null,
+    });
+    alert('Demo data and login sessions have been reset.');
   };
 
   return (
     <div className="app-layout">
-      {/* Universal Header with Role Switcher */}
+      {/* Universal Header with Role Switcher & Auth status */}
       <Header
         activeRole={activeRole}
         setActiveRole={setActiveRole}
         isDarkTheme={isDarkTheme}
         toggleTheme={toggleTheme}
         resetDemoData={resetDemoData}
+        authUsers={authUsers}
+        onLogout={handleLogout}
         notificationsCount={3}
       />
 
       {/* Main Workspace */}
       <main className="app-main">
+        {/* Home / Overview - Always Public */}
         {activeRole === 'home' && (
           <HomePage
             setActiveRole={setActiveRole}
@@ -73,31 +132,59 @@ export default function App() {
           />
         )}
 
+        {/* Student Portal - Requires Student Login */}
         {activeRole === 'student' && (
-          <StudentPortal
-            studentProfile={studentProfile}
-            setStudentProfile={setStudentProfile}
-            jobs={jobs}
-            applications={applications}
-            setApplications={setApplications}
-            setActiveRole={setActiveRole}
-          />
+          !authUsers.student ? (
+            <RoleLoginPortal
+              targetRole="student"
+              setActiveRole={setActiveRole}
+              onLoginSuccess={handleLoginSuccess}
+            />
+          ) : (
+            <StudentPortal
+              studentProfile={studentProfile}
+              setStudentProfile={setStudentProfile}
+              jobs={jobs}
+              applications={applications}
+              setApplications={setApplications}
+              setActiveRole={setActiveRole}
+            />
+          )
         )}
 
+        {/* TPO / Institute Portal - Requires TPO Cell Login */}
         {activeRole === 'tpo' && (
-          <TpoPortal
-            jobs={jobs}
-            setJobs={setJobs}
-          />
+          !authUsers.tpo ? (
+            <RoleLoginPortal
+              targetRole="tpo"
+              setActiveRole={setActiveRole}
+              onLoginSuccess={handleLoginSuccess}
+            />
+          ) : (
+            <TpoPortal
+              jobs={jobs}
+              setJobs={setJobs}
+            />
+          )
         )}
 
+        {/* Recruiter Portal - Requires Recruiter Login */}
         {activeRole === 'recruiter' && (
-          <RecruiterPortal
-            jobs={jobs}
-            setJobs={setJobs}
-          />
+          !authUsers.recruiter ? (
+            <RoleLoginPortal
+              targetRole="recruiter"
+              setActiveRole={setActiveRole}
+              onLoginSuccess={handleLoginSuccess}
+            />
+          ) : (
+            <RecruiterPortal
+              jobs={jobs}
+              setJobs={setJobs}
+            />
+          )
         )}
 
+        {/* AI Career Mentor - NO LOGIN REQUIRED (Free / open for all) */}
         {activeRole === 'ai_mentor' && (
           <AiMentorView
             studentProfile={studentProfile}
